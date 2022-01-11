@@ -9,23 +9,17 @@ const main = async () => {
 
     let waveCount
     waveCount = await waveContract.getTotalWaves()
+    console.log(waveCount.toNumber())
 
     let waveTxn = await waveContract.wave()
     await waveTxn.wait()
 
-    waveCount = await waveContract.getTotalWaves()
+    const [_, randomPerson] = await hre.ethers.getSigners()
+    waveTxn = await waveContract.connect(randomPerson).wave('Another message!')
+    await waveTxn.wait()
 
-    waveTxn = await waveContract.connect(randomPerson).wave()
-
-    waveCount = await waveContract.getTotalWaves()
-
-    // storing list of addresses in an array
-    const senderAddressStore = []
-    senderAddressStore.push(waveTxn)
-    const senderAddressList = senderAddressStore.map(sender => {
-        return sender.from
-    })
-    console.log(senderAddressList)
+    let allWaves = await waveContract.getAllWaves()
+    console.log(allWaves)
 }
 
 const runMain = async () => {
