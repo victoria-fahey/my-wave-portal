@@ -20,7 +20,7 @@ contract WavePortal {
     // can hold all the waves anyone ever sends
     Wave[] waves;
 
-    constructor() {
+    constructor() payable {
         console.log("I am a contract and I am smart");
     }
 
@@ -35,6 +35,18 @@ contract WavePortal {
 
         // events are called using 'emit'
         emit NewWave(msg.sender, block.timestamp, _message);
+
+        // setting up sending amount of eth as a prize
+        uint256 prizeAmount = 0.0001 ether;
+        // require = fancy if statement
+        // if the balance of hte contract is > prize amount give the prize,
+        // if not kill the transaction
+        require(
+            prizeAmount <= address(this).balance,
+            "Trying to withdraw more money than the contract has."
+        );
+        (bool success, ) = (msg.sender).call{value: prizeAmount}("");
+        require(success, "Failed to withdraw money from contract.");
     }
 
     // returns the struct array where we can retrieve the waves from our website
