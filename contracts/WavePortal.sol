@@ -7,6 +7,9 @@ import "hardhat/console.sol";
 contract WavePortal {
     uint256 totalWaves;
 
+    // generate random number:
+    uint256 seed;
+
     event NewWave(address indexed from, uint256 timestamp, string message);
 
     // struct is a custom datatype where we can customise what we want to hold inside it
@@ -22,6 +25,9 @@ contract WavePortal {
 
     constructor() payable {
         console.log("I am a contract and I am smart");
+        // set the initial seed:
+        // combine timestamp & difficulty to create random numebr
+        seed = (block.timestamp + block.difficulty) % 100;
     }
 
     // function requires a string called _message
@@ -33,20 +39,27 @@ contract WavePortal {
         // store wave data in the array
         waves.push(Wave(msg.sender, _message, block.timestamp));
 
+        // generate a new seed for the next user that sends a waves
+        seed = (block.difficulty + block.timestamp + seed) % 100;
+        console.log("Random # generated: %d", seed);
+
+        // give 50% change that the user wins the prize:
+        if (seed <= 50) {
+            console.log("%s won!", msg.sender);
+            // setting up sending amount of eth as a prize
+            uint256 prizeAmount = 0.0001 ether;
+            // require = fancy if statement
+            // if the balance of hte contract is > prize amount give the prize,
+            // if not kill the transaction
+            require(
+                prizeAmount <= address(this).balance,
+                "Trying to withdraw more money than the contract has."
+            );
+            (bool success, ) = (msg.sender).call{value: prizeAmount}("");
+            require(success, "Failed to withdraw money from contract.");
+        }
         // events are called using 'emit'
         emit NewWave(msg.sender, block.timestamp, _message);
-
-        // setting up sending amount of eth as a prize
-        uint256 prizeAmount = 0.0001 ether;
-        // require = fancy if statement
-        // if the balance of hte contract is > prize amount give the prize,
-        // if not kill the transaction
-        require(
-            prizeAmount <= address(this).balance,
-            "Trying to withdraw more money than the contract has."
-        );
-        (bool success, ) = (msg.sender).call{value: prizeAmount}("");
-        require(success, "Failed to withdraw money from contract.");
     }
 
     // returns the struct array where we can retrieve the waves from our website
